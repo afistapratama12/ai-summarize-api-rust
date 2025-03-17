@@ -29,7 +29,6 @@ struct Choice {
 
 #[derive(Deserialize, Debug)]
 pub struct AssistantMessage {
-  pub role: String,
   pub content: String,
 }
 

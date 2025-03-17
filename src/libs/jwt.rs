@@ -1,10 +1,16 @@
-use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
-use jsonwebtoken::{TokenData, errors::Error as JwtError};
-
-use serde::{Serialize, Deserialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::env;
 use dotenv::dotenv;
+use serde::{Serialize, Deserialize};
+use jsonwebtoken::{
+  encode, decode, 
+  Header, Validation, 
+  EncodingKey, DecodingKey
+};
+use jsonwebtoken::{
+  TokenData, 
+  errors::Error as JwtError
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {

@@ -1,5 +1,4 @@
-#![allow(unused)]
-
+use std::{fs::File, io::Read};
 use sea_orm::DatabaseConnection;
 use warp::{
   filters::multipart::FormData,
@@ -7,26 +6,31 @@ use warp::{
   Rejection,
   Reply,
 };
-use std::{fs::File, io::Read};
 use uuid::Uuid;
 use futures::TryStreamExt;
 use pdf_extract;
 use docx_rust::*;
 use bytes::Buf;
-use dotenv::dotenv;
-use serde_json::{Value, json};
 
-use crate::{common::error::InternalServerError, libs::{jwt::{validate_jwt, Claims}, openai::chat_completion}};
-use super::{request::{SummarizationRequest, SummaryRequest}, response::{SummarizeResponse, UploadResponse}};
-
+use super::{
+  request::SummaryRequest, 
+  response::{SummarizeResponse, UploadResponse}
+};
 use super::response::{error_resp, success_resp};
+use crate::{
+  common::error::InternalServerError, 
+  libs::{
+    jwt::Claims,
+    openai::chat_completion
+  },
+};
 
-pub async fn upload_file_handler(claims: Claims, form: FormData, db: DatabaseConnection) -> Result<impl Reply, Rejection> {
+#[allow(unused_variables)]
+pub async fn upload_file_handler(_claims: Claims, form: FormData, db: DatabaseConnection) -> Result<impl Reply, Rejection> {
   let mut parts = form.into_stream();
 
   let file_id = Uuid::new_v4().to_string().replace("-", "");
   let mut file_ext = String::new();
-  let mut file_name = String::new();
 
   while let Ok(Some(p)) = parts.try_next().await {
     if p.name() == "file" {
@@ -65,7 +69,7 @@ pub async fn upload_file_handler(claims: Claims, form: FormData, db: DatabaseCon
             warp::reject::reject()
         })?;
 
-      file_name = format!("./upload/{}.{}", file_id, file_ext.clone());
+      let file_name = format!("./upload/{}.{}", file_id, file_ext.clone());
       tokio::fs::write(&file_name, value).await.map_err(|e| {
           eprint!("error writing file: {}", e);
           warp::reject::custom(InternalServerError{message: "error writing file".to_string()})
@@ -75,7 +79,6 @@ pub async fn upload_file_handler(claims: Claims, form: FormData, db: DatabaseCon
     }
   }
 
-  // Store file information in the database here
   let file_resp = UploadResponse {
     file_id,
     file_ext,
@@ -84,7 +87,9 @@ pub async fn upload_file_handler(claims: Claims, form: FormData, db: DatabaseCon
   Ok(success_resp(warp::reply::json(&file_resp)))
 }
 
-pub async fn summarize(claims: Claims, req: SummaryRequest, db: DatabaseConnection) -> Result<impl Reply, Rejection> {  
+// handler for summarizing the content of a file
+#[allow(unused_variables)]
+pub async fn summarize(_claims: Claims, req: SummaryRequest, db: DatabaseConnection) -> Result<impl Reply, Rejection> {  
   let file_ext = req.file_ext.clone();
   let file_name = format!("./upload/{}.{}", req.file_id, file_ext);
 

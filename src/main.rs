@@ -12,11 +12,12 @@ use driver::db;
 
 #[tokio::main]
 async fn main() {
+    // init database
     let db = db::connect_db().await;
-    // let customer_routes = routes::customer_routes(db);
-    // handle 2 routes
+    // init routes
     let routes = routes::routes(db);
 
+    // start server in port 3000
     warp::serve(routes)
         .run(([127, 0, 0, 1], 3000))
         .await;
